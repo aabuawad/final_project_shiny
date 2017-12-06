@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1512569279236.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "92E5AA27",
+    "lastKnownWriteTime" : 7594004793580847110,
+    "last_content_update" : 1512569279236,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "7BED53F9",
+        "caption" : "eda_data",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=eda_data&cache_key=7BED53F9",
+        "displayedObservations" : 1116,
+        "environment" : "",
+        "object" : "eda_data",
+        "preview" : 0,
+        "totalObservations" : 1116,
+        "variables" : 16
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

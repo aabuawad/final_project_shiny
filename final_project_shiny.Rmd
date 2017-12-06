@@ -92,10 +92,11 @@ all_data <- left_join(school_data, lead_data, by = "school_number") %>%
                                            ifelse(largest == other_race, "Other", "Missing"))))),
          latitude = as.numeric(latitude),
          longitude = as.numeric(longitude)) %>% 
-  mutate(lead_med = ifelse(lead_percent > median(lead_percent, na.rm = TRUE), "High", "Low"))
+  mutate(lead_med = ifelse(lead_percent > median(lead_percent, na.rm = TRUE), "High", "Low")) %>% 
+  clean_names()
 
-eda_data <- all_data %>% 
-  select(school_number, english_language_learners, hispanic, other_race, poverty,
+eda_data <- all_data %>%
+  select(school_name_x, school_number, english_language_learners, hispanic, other_race, poverty,
          students_with_disabilities, white, asian, black, grade, mean_scale_score,
          any_lead_free_buildings, lead_percent, minority, race, lead_med)
 
@@ -110,22 +111,25 @@ Column {.sidebar}
 
 ```{r}
 # selectInput widget
-school_choice = all_data %>% distinct(school_name.x) %>% pull()
+school_choice = all_data %>% 
+  filter(!is.na(longitude),
+         !is.na(latitude)) %>% 
+  distinct(school_name_x) %>% 
+  pull()
 
 selectInput("school_choice", label = h3("Select School"),
             choices = school_choice, selected = "15K839 - M.S. 839")
 
 # radioButtons widget
 lead_choice = all_data %>%
+  filter(!is.na(lead_med)) %>% 
   distinct(lead_med) %>% 
-  drop_na() %>% 
   pull()
 
 radioButtons("lead_choice", label = h3("Choose Lead Proportion"),
     choices = lead_choice, 
     selected = "High")
 data <- reactive(subset(all_data, name == input$lead_med))
-
 ```
 
 Row
@@ -134,21 +138,9 @@ Row
 ### NYC Schools By Median Lead Exposure
 
 ```{r}
-
-ui <- fluidPage(
-  leafletOutput("mymap"),
-  p(),
-  actionButton("lead_med", "New points")
-)
-
-server <- function(input, output, session) {
-
-  points <- eventReactive(input$lead_med, {
-    cbind(rnorm(40) * 2 + 13, rnorm(40) + 48)
-  }, ignoreNULL = FALSE)
-
-  output$mymap <- renderLeaflet({all_data %>%
-  mutate(content = str_c("School: ", school_number,
+ renderLeaflet({all_data %>%
+  filter(school_name_x == input$school_choice) %>% 
+  mutate(content = str_c("School: ", school_name_x,
                  "\n Race: ", race, 
                  "\n Poverty: ", poverty)) %>% 
   leaflet() %>% 
@@ -158,10 +150,6 @@ server <- function(input, output, session) {
   addLegend(position = "bottomright", pal = pal_lead, values = ~lead_med,
             title = "Lead Proportion", opacity = 3)
 })
-}
-
-shinyApp(ui, server)
-
 ```
 
 Row {.tabset .tabset-fade}
@@ -170,27 +158,26 @@ Row {.tabset .tabset-fade}
 ### Lead and Minority Status
 
 ```{r}
-
 renderPlot({eda_data %>%
+  filter(lead_med == input$lead_choice) %>% 
   ggplot(aes(y = lead_percent, x = race, fill = race)) + 
   geom_violin() + scale_fill_brewer(palette = "Pastel2") +
   labs(x = "Figure 2. Race/Ethnicity", y = "Proportion of pipes with lead > 15 ppb",
        title = "Race/Ethnicity and Lead Exposure") +
        theme(legend.position = "none")
 })
-
 ```
 
 ### Race and Standardized Test Scores
 
 ```{r}
-renderPlot({eda_data %>% 
+renderPlot({eda_data %>%
+  filter(lead_med == input$lead_choice) %>% 
   ggplot(aes(y = mean_scale_score, x = race, fill = race)) + 
   geom_violin() + scale_fill_brewer(palette = "Pastel2") +
   labs(y = "Standardized math test scores", x = "Race/Ethnicity",
        title = "Figure 4. Race/Ethnicity and student math scores") +
   theme(legend.position = "none")
-})
-
+    })
 ```
 
