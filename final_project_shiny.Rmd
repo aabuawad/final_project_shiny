@@ -112,36 +112,41 @@ Column {.sidebar}
 ```{r}
 # radioButtons widget
 lead_choice = all_data %>%
-  filter(!is.na(lead_med)) %>% 
+  filter(!is.na(lead_med)) %>%
   distinct(lead_med) %>% 
   pull()
 
+lead_choice = c("All", lead_choice)
+
 radioButtons("lead_choice", label = h3("Choose Lead Proportion"),
-    choices = lead_choice, 
-    selected = "High")
-data <- reactive(subset(all_data, name == input$lead_med))
+    choices = lead_choice,
+    selected = "All")
+data <- reactive(
+  if(input$lead_med != 'All'){
+  subset(all_data, name == input$lead_med)  
+  }
+  
+  )
 
 hr()
 
 # selectInput widget
 # set school based on lead level
 renderUI({
-  high_school = all_data %>% filter(lead_med == input$lead_choice) %>% 
-                           distinct(school_name) %>% pull()
-  
-  low_school = all_data %>% filter(lead_med == input$lead_choice) %>% 
-                           distinct(school_name) %>% pull()
-  
-school_choice = all_data %>% 
-  filter(!is.na(longitude),
+
+school_choice = all_data %>%
+  filter(lead_med == input$lead_choice,
+         !is.na(longitude),
          !is.na(latitude)) %>%
   distinct(school_name_x) %>% 
   pull()
-
+  
 selectizeInput("school_choice", label = h3("Select School"),
-            choices = school_choice, selected = school_choice, multiple = TRUE,
+            choices = school_choice, selected = school_choice[1], multiple = TRUE,
                options = list(create = TRUE))
 })
+
+
 
 ```
 
