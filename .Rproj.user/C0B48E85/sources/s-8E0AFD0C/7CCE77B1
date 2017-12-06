@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1512593141656.000,
+    "dirty" : true,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "7CCE77B1",
+    "lastKnownWriteTime" : 1512593141,
+    "last_content_update" : 1512593309909,
+    "path" : "~/Documents/Columbia/Data Science I/final_project_shiny/final_shiny/app.R",
+    "project_path" : "final_shiny/app.R",
+    "properties" : {
+        "cursorPosition" : "5,49",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

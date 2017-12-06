@@ -105,49 +105,21 @@ pal_race <- colorFactor(c("#F8766D", "#00BFC4", "#C77CFF", "#00BA38"), all_data$
 pal_lead <- colorFactor(c("#C77CFF", "#00BFC4"), all_data$lead_med)
 ```
 
-
 Column {.sidebar}
 -----------------------------------------------------------------------
 
 ```{r}
 # radioButtons widget
-lead_choice = all_data %>%
+lead_choice = eda_data %>%
   filter(!is.na(lead_med)) %>%
   distinct(lead_med) %>% 
   pull()
-
-lead_choice = c("All", lead_choice)
-
-radioButtons("lead_choice", label = h3("Choose Lead Proportion"),
-    choices = lead_choice,
-    selected = "All")
-data <- reactive(
-  if(input$lead_med != 'All'){
-  subset(all_data, name == input$lead_med)  
-  }
   
-  )
+selectizeInput("lead_choice", label = h3("Select Lead Proportion"),
+            choices = lead_choice, selected = lead_choice[1:2], multiple = TRUE,
+               options = list(create = TRUE))
 
 hr()
-
-# selectInput widget
-# set school based on lead level
-renderUI({
-
-school_choice = all_data %>%
-  filter(lead_med == input$lead_choice,
-         !is.na(longitude),
-         !is.na(latitude)) %>%
-  distinct(school_name_x) %>% 
-  pull()
-  
-selectizeInput("school_choice", label = h3("Select School"),
-            choices = school_choice, selected = school_choice[1], multiple = TRUE,
-               options = list(create = TRUE))
-})
-
-
-
 ```
 
 Row
@@ -157,8 +129,7 @@ Row
 
 ```{r}
  renderLeaflet({all_data %>%
-  filter(lead_med == input$lead_choice,
-         school_name_x == input$school_choice) %>% 
+  filter(lead_med == input$lead_choice) %>% 
   mutate(content = str_c("School: ", school_name_x,
                  "\n Race: ", race, 
                  "\n Poverty: ", poverty)) %>% 
@@ -167,7 +138,7 @@ Row
   addCircles(~longitude, ~latitude, 
              label = ~content, color = ~pal_lead(lead_med), fillOpacity = 3) %>% 
   addLegend(position = "bottomright", pal = pal_lead, values = ~lead_med,
-            title = "Lead Proportion", opacity = 3)
+            title = "Proportion of Lead Outlets > 15 ppb Relative to Median of All NYC Schools", opacity = 3)
 })
 ```
 
@@ -181,8 +152,8 @@ renderPlot({eda_data %>%
   filter(lead_med == input$lead_choice) %>% 
   ggplot(aes(y = lead_percent, x = race, fill = race)) + 
   geom_violin() + scale_fill_brewer(palette = "Pastel2") +
-  labs(x = "Figure 2. Race/Ethnicity", y = "Proportion of pipes with lead > 15 ppb",
-       title = "Race/Ethnicity and Lead Exposure") +
+  labs(x = "Race/Ethnicity", y = "Proportion of pipes with lead > 15 ppb",
+       title = "Lead Exposure Based on Racial/Ethnic Group") +
        theme(legend.position = "none")
 })
 ```
@@ -195,7 +166,7 @@ renderPlot({eda_data %>%
   ggplot(aes(y = mean_scale_score, x = race, fill = race)) + 
   geom_violin() + scale_fill_brewer(palette = "Pastel2") +
   labs(y = "Standardized math test scores", x = "Race/Ethnicity",
-       title = "Figure 4. Race/Ethnicity and student math scores") +
+       title = "Standardized Test Scores Based on Racial/Ethnic Group") +
   theme(legend.position = "none")
     })
 ```
