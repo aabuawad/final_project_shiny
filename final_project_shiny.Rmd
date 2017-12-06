@@ -166,7 +166,7 @@ Row
 })
 ```
 
-Row {.tabset .tabset-fade}
+Row {data-width=350}
 -----------------------------------------------------------------------
 
 ### Lead and Minority Status
