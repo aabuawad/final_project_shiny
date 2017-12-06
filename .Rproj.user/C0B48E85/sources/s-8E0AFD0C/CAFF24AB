@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1512508522123.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1483987866",
+    "id" : "CAFF24AB",
+    "lastKnownWriteTime" : 1512537572,
+    "last_content_update" : 1512537572146,
+    "path" : "~/Documents/Columbia/Data Science I/final_project_shiny/final_project_shiny.Rmd",
+    "project_path" : "final_project_shiny.Rmd",
+    "properties" : {
+        "cursorPosition" : "179,2",
+        "scrollLine" : "178",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

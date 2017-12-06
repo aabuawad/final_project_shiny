@@ -1,0 +1,148 @@
+---
+title: "NOAA: Patterns of Climate in New York State, 1981-2010"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: row
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(janitor)
+library(stringr)
+library(forcats)
+library(plotly)
+library(dplyr)
+library(shiny)
+library(devtools)
+```
+
+```{r read}
+#Read and clean data
+noaa <- read_csv("./nynoaadat.csv") #used a subset sample of 50 unique id's from dataset
+
+noaa <-  noaa %>% 
+  clean_names() %>% 
+  mutate(tmax = as.numeric(tmax), tmin = as.numeric(tmin)) %>% 
+  separate(date, c("year", "month", "day"), sep = "-") %>% 
+  mutate(tmin = tmin / 10,
+    tmax = tmax / 10,
+    prcp = prcp / 10,
+    rained = ifelse(prcp > 0, "Yes", "No"),) 
+
+noaa_year_stats <- noaa %>% 
+  group_by(year) %>% 
+  summarise(tmax_year = max(tmax, na.rm = TRUE),
+            ave_max_year = round(mean(tmax, na.rm = TRUE), 2),
+            range = round(max(tmax, na.rm = TRUE) - min(tmax, na.rm = TRUE), 2),
+            ave_min_year = round(mean(tmin, na.rm = TRUE), 2))
+```
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+```{r}
+# radioButtons widget
+rain_choice = noaa %>%
+  distinct(rained) %>% 
+  drop_na() %>% 
+  pull()
+
+radioButtons("rain_choice", label = h3("Did it rain during those days?"),
+    choices = rain_choice, 
+    selected = "No")
+
+# selectInput widget
+station_choice = noaa %>% distinct(id) %>% pull()
+
+selectInput("station_choice", label = h3("Select Station"),
+            choices = station_choice, selected = "US1NYOS0001")
+
+# sliderInput widget
+min_temp = noaa %>% 
+  filter(!is.na(tmax),
+         tmax > 35) %>% 
+  distinct(tmax) %>% 
+  min()
+max_temp = noaa %>% 
+  filter(!is.na(tmax),
+         tmax > 35) %>% 
+  distinct(tmax) %>% 
+  max()
+
+sliderInput("temp_range", label = h3("Select Temperature Range"), 
+            min = min_temp, max = max_temp, value = c(35, 40))
+```
+
+Row
+-----------------------------------------------------------------------
+
+### Average Maximum Temperature in New York State
+
+```{r}
+renderPlotly({noaa %>%
+  filter(rained == input$rain_choice) %>% 
+  group_by(year) %>% 
+  summarise(ave_max = round(mean(tmax, na.rm = TRUE), 2),
+            range = round(max(tmax, na.rm = TRUE) - min(tmax, na.rm = TRUE), 2)) %>%
+  mutate(text_label = str_c("Ave Max Temp: ", ave_max, '\nRange of Max Temps: ', range)) %>% 
+  plot_ly(x = ~year, y = ~ave_max, type = "scatter", mode = "markers",
+          alpha = 0.5, 
+          text = ~text_label) %>% 
+  add_lines(y = ~fitted(loess(ave_max ~ year)),
+            line = list(color = '#07A4B5'),
+            name = "Loess Smoother", showlegend = FALSE) %>% 
+  layout(xaxis = list(title = "Year",
+                      showticklabels = TRUE,
+                      tickangle = 45),
+                      margin = list(b = 48),
+      yaxis = list(title = "Temperature (degrees Celsius)"))
+})
+```
+
+Row {.tabset .tabset-fade}
+-----------------------------------------------------------------------
+
+### Precipitation in New York State by Five Year Intervals
+
+```{r}
+renderPlotly({noaa %>% 
+  filter(id == input$station_choice) %>% 
+  filter(!is.na(prcp)) %>% 
+  group_by(year) %>% 
+  summarise(ave_rain = round(mean(prcp, na.rm = TRUE), 2)) %>%
+  mutate(year = as.numeric(year),
+         five_years = cut(year, breaks = 6)) %>% 
+  plot_ly(y = ~ave_rain, color = ~five_years, type = "box",
+          colors = "Set2") %>% 
+  layout(xaxis = list(title = "Year Interval"),
+      yaxis = list(title = "Precipitation (mm)"))
+})
+```
+
+### Number of Days above 35 degrees C (95 degrees F) across New York State
+
+```{r}
+renderPlotly({noaa %>%
+  filter(tmax %in% input$temp_range[1]:input$temp_range[2]) %>% 
+  group_by(year, month, day) %>% 
+  summarize(tmax_day = max(tmax, na.rm = TRUE)) %>%
+  filter(tmax_day > 35) %>% 
+  group_by(year) %>% 
+  count(year) %>% 
+  left_join(., noaa_year_stats, by = "year") %>% 
+  mutate(text_label = str_c("Max Temp: ", tmax_year, 
+                            "\nAve Max Temp: ", ave_max_year, 
+                            "\nAve Min Temp: ", ave_min_year, 
+                            '\nRange of Max Temps: ', range)) %>%
+  plot_ly(x = ~year, y = ~n, type = "bar", text = ~text_label) %>% 
+  layout(xaxis = list(title = "Year",
+        showticklabels = TRUE,
+        tickangle = 45),
+        margin = list(b = 48),
+        yaxis = list(title = "Number of Days above 35 degrees C"))
+ })
+```
+
+
